@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gtrscaler",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "live-server", "--port=8080", "--no-browser", "--entry-file=fretboard-scale-mapper.html"],
+      "port": 8080
+    }
+  ]
+}
