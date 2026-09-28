@@ -1630,6 +1630,35 @@
       return NUM_WORDS[s.toLowerCase()];
     }
 
+    // Vosk spells numbers out ("one hundred twenty"), but the command patterns
+    // expect digits, so runs of number words are collapsed to digits first.
+    var SPOKEN_NUMS = {zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,
+      ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,
+      eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,
+      eighty:80,ninety:90};
+    function wordsToDigits(text){
+      var words = text.split(/\s+/), out = [], i = 0;
+      while(i < words.length){
+        var value = 0, count = 0;
+        while(i < words.length){
+          var w = words[i];
+          if(SPOKEN_NUMS.hasOwnProperty(w)){
+            var n = SPOKEN_NUMS[w];
+            // "one twenty" / "one forty five" is how tempos are said: 120, 145
+            if(count === 1 && value < 10 && n >= 20 && n % 10 === 0) value *= 100;
+            value += n; count++; i++;
+          } else if(w === "hundred" && count){
+            value *= 100; i++;
+          } else if(w === "and" && count && SPOKEN_NUMS.hasOwnProperty(words[i+1])){
+            i++;
+          } else break;
+        }
+        if(count) out.push(String(value));
+        else out.push(words[i++]);
+      }
+      return out.join(" ");
+    }
+
     function normAcc(raw){
       raw = (raw||"").toLowerCase();
       if(raw === "sharp" || raw === "#" || raw === "♯") return "sharp";
@@ -1717,7 +1746,7 @@
     }
 
     function handleCommand(raw){
-      var text = raw.toLowerCase().replace(/[.,!?]/g,"").trim();
+      var text = wordsToDigits(raw.toLowerCase().replace(/[.,!?]/g,"").trim());
       var did = false, msg = "";
 
       if(/\b(stop|turn off)\b.*\b(voice|listening|mic|microphone)\b/.test(text) || /\bvoice off\b/.test(text)){
